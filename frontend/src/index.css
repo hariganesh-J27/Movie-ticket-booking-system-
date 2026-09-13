@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .curved-screen {
+    box-shadow: 0 15px 35px -10px rgba(0, 180, 216, 0.4);
+    border-radius: 50% / 15px;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #1f2533;
+}
+::-webkit-scrollbar-thumb {
+  background: #3e485e;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f84464;
+}
