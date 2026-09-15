@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { serializeBooking } from "@/lib/serializers";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { user_name, user_email, user_phone, showtime_id, seat_ids, seat_numbers, total_amount } = body;
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ success: false, message: "Sign in to book tickets" }, { status: 401 });
+  }
 
-  if (!user_name || !user_email || !user_phone || !showtime_id || !seat_ids || seat_ids.length === 0) {
+  const body = await req.json();
+  const { user_name, user_phone, showtime_id, seat_ids, seat_numbers, total_amount } = body;
+  const userName = user_name || session.user.name || "Guest";
+  const userEmail = session.user.email;
+
+  if (!userEmail || !user_phone || !showtime_id || !seat_ids || seat_ids.length === 0) {
     return NextResponse.json(
       { success: false, message: "Invalid booking data. Please select seats and provide user info." },
       { status: 400 }
@@ -31,8 +39,9 @@ export async function POST(req: NextRequest) {
       const booking = await tx.booking.create({
         data: {
           bookingRef,
-          userName: user_name,
-          userEmail: user_email,
+          userId: session.user!.id,
+          userName,
+          userEmail,
           userPhone: user_phone,
           showtimeId: Number(showtime_id),
           totalAmount: total_amount,
@@ -66,13 +75,15 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const email = searchParams.get("email");
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ success: false, message: "Sign in to view your bookings" }, { status: 401 });
+  }
 
   try {
     const bookings = await prisma.booking.findMany({
-      where: email ? { userEmail: email } : undefined,
+      where: { userId: session.user.id },
       include: { showtime: { include: { movie: true, theater: true } } },
       orderBy: { bookingDate: "desc" },
     });

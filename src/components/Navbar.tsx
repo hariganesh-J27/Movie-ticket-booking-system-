@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, MapPin, Ticket, Film, ChevronDown, PlusCircle } from "lucide-react";
+import { Search, MapPin, Ticket, Film, ChevronDown, PlusCircle, LogIn, LogOut } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 interface NavbarProps {
   searchQuery: string;
@@ -21,6 +22,8 @@ export default function Navbar({
   onOpenAddMovie,
   onResetHome,
 }: NavbarProps) {
+  const { data: session, status } = useSession();
+
   return (
     <header className="sticky top-0 z-40 bg-bms-darker text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
@@ -74,6 +77,30 @@ export default function Navbar({
             <PlusCircle className="w-4 h-4 text-emerald-400" />
             <span className="hidden sm:inline">Add Movie</span>
           </button>
+
+          {status === "authenticated" ? (
+            <button
+              onClick={() => signOut()}
+              title={`Signed in as ${session.user?.email ?? ""}`}
+              className="flex items-center gap-2 text-xs md:text-sm bg-[#2B3141] hover:bg-[#363D50] text-gray-200 pl-1.5 pr-3 py-1.5 rounded-full transition font-medium border border-gray-700 cursor-pointer"
+            >
+              {session.user?.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={session.user.image} alt={session.user.name ?? "User"} className="w-6 h-6 rounded-full" />
+              ) : (
+                <LogOut className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">{session.user?.name?.split(" ")[0] ?? "Sign out"}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => signIn("google")}
+              className="flex items-center gap-1.5 text-xs md:text-sm bg-white hover:bg-gray-100 text-gray-900 px-3 py-1.5 rounded-md transition font-semibold shadow-md cursor-pointer"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign in with Google</span>
+            </button>
+          )}
         </div>
       </div>
 

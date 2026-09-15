@@ -110,7 +110,6 @@ export async function fetchSeats(
 
 export async function createBooking(bookingData: {
   user_name: string;
-  user_email: string;
   user_phone: string;
   showtime_id: number;
   seat_ids: number[];
@@ -125,12 +124,10 @@ export async function createBooking(bookingData: {
   return res.json();
 }
 
-export async function fetchUserBookings(email?: string): Promise<ApiResult<Booking[]>> {
-  const url = new URL("/api/bookings", window.location.origin);
-  if (email) url.searchParams.set("email", email);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch bookings");
-  return res.json();
+export async function fetchUserBookings(): Promise<ApiResult<Booking[]> & { status?: number }> {
+  const res = await fetch("/api/bookings");
+  const data = await res.json();
+  return { ...data, status: res.status };
 }
 
 export async function cancelBooking(bookingId: number) {
