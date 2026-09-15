@@ -1,0 +1,103 @@
+// Prisma schema for the movie ticket booking system.
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Movie {
+  movieId     Int      @id @default(autoincrement()) @map("movie_id")
+  title       String
+  genre       String
+  duration    Int
+  rating      Float?
+  language    String
+  description String?
+  posterUrl   String?  @map("poster_url")
+  bannerUrl   String?  @map("banner_url")
+  releaseDate String?  @map("release_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  showtimes Showtime[]
+
+  @@map("movies")
+}
+
+model Theater {
+  theaterId          Int      @id @default(autoincrement()) @map("theater_id")
+  name               String
+  location           String
+  city               String   @default("Chennai")
+  totalScreens       Int      @default(6) @map("total_screens")
+  cancellationStatus String   @default("Non-cancellable") @map("cancellation_status")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  showtimes Showtime[]
+
+  @@map("theaters")
+}
+
+model Showtime {
+  showtimeId    Int    @id @default(autoincrement()) @map("showtime_id")
+  movieId       Int    @map("movie_id")
+  theaterId     Int    @map("theater_id")
+  showDate      String @map("show_date")
+  showTime      String @map("show_time")
+  priceClassic  Float  @default(59.00) @map("price_classic")
+  pricePrime    Float  @default(200.00) @map("price_prime")
+  priceRecliner Float  @default(350.00) @map("price_recliner")
+
+  movie    Movie     @relation(fields: [movieId], references: [movieId], onDelete: Cascade)
+  theater  Theater   @relation(fields: [theaterId], references: [theaterId], onDelete: Cascade)
+  seats    Seat[]
+  bookings Booking[]
+
+  @@map("showtimes")
+}
+
+model Seat {
+  seatId       Int     @id @default(autoincrement()) @map("seat_id")
+  showtimeId   Int     @map("showtime_id")
+  seatNumber   String  @map("seat_number")
+  seatCategory String  @map("seat_category")
+  isBooked     Int     @default(0) @map("is_booked")
+
+  showtime     Showtime      @relation(fields: [showtimeId], references: [showtimeId], onDelete: Cascade)
+  bookingSeats BookingSeat[]
+
+  @@unique([showtimeId, seatNumber])
+  @@map("seats")
+}
+
+model Booking {
+  bookingId   Int      @id @default(autoincrement()) @map("booking_id")
+  bookingRef  String   @unique @map("booking_ref")
+  userName    String   @map("user_name")
+  userEmail   String   @map("user_email")
+  userPhone   String   @map("user_phone")
+  showtimeId  Int      @map("showtime_id")
+  totalAmount Float    @map("total_amount")
+  seatsList   String   @map("seats_list")
+  bookingDate DateTime @default(now()) @map("booking_date")
+
+  showtime     Showtime      @relation(fields: [showtimeId], references: [showtimeId])
+  bookingSeats BookingSeat[]
+
+  @@map("bookings")
+}
+
+model BookingSeat {
+  bookingId Int @map("booking_id")
+  seatId    Int @map("seat_id")
+
+  booking Booking @relation(fields: [bookingId], references: [bookingId], onDelete: Cascade)
+  seat    Seat    @relation(fields: [seatId], references: [seatId], onDelete: Cascade)
+
+  @@id([bookingId, seatId])
+  @@map("booking_seats")
+}
