@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { X, ShoppingBag, User, Mail, Phone, CheckCircle2 } from "lucide-react";
 import { createBooking } from "@/lib/api";
 import type { MovieLike, TheaterLike, ShowLike, SeatLike, BookingLike } from "@/lib/types";
@@ -24,8 +25,9 @@ export default function BookingSummaryModal({
   onClose,
   onBookingSuccess,
 }: BookingSummaryModalProps) {
-  const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const { data: session } = useSession();
+  const [userName, setUserName] = useState(session?.user?.name ?? "");
+  const [userEmail] = useState(session?.user?.email ?? "");
   const [userPhone, setUserPhone] = useState("");
 
   const [includePopcorn, setIncludePopcorn] = useState(false);
@@ -52,7 +54,6 @@ export default function BookingSummaryModal({
     try {
       const payload = {
         user_name: userName,
-        user_email: userEmail,
         user_phone: userPhone,
         showtime_id: showtime.showtime_id,
         seat_ids: selectedSeats.map((s) => s.seat_id),
@@ -186,10 +187,10 @@ export default function BookingSummaryModal({
                   <input
                     type="email"
                     required
-                    placeholder="rahul@example.com"
+                    readOnly
+                    title="Email is taken from your signed-in Google account"
                     value={userEmail}
-                    onChange={(e) => setUserEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-bms-red focus:outline-none"
+                    className="w-full pl-9 pr-3 py-2 text-xs bg-gray-100 border border-gray-300 rounded-lg text-gray-500 cursor-not-allowed"
                   />
                 </div>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession, signIn } from "next-auth/react";
 import Navbar from "@/components/Navbar";
 import HeroBanner from "@/components/HeroBanner";
 import MovieCard from "@/components/MovieCard";
@@ -52,6 +53,7 @@ const DEFAULT_MOVIES: MovieLike[] = [
 type View = "home" | "showtimes" | "seatpicker";
 
 export default function Home() {
+  const { status: authStatus } = useSession();
   const [currentView, setCurrentView] = useState<View>("home");
 
   const [movies, setMovies] = useState<MovieLike[]>(DEFAULT_MOVIES);
@@ -134,6 +136,10 @@ export default function Home() {
   };
 
   const handleProceedToCheckout = (seatData: SeatSelection) => {
+    if (authStatus !== "authenticated") {
+      signIn("google");
+      return;
+    }
     setSelectedSeatData(seatData);
     setShowBookingSummaryModal(true);
   };

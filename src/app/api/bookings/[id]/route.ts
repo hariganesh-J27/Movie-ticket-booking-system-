@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ success: false, message: "Sign in to manage your bookings" }, { status: 401 });
+  }
+
   const { id } = await params;
   const bookingId = Number(id);
 
   try {
     await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.findUnique({ where: { bookingId } });
+      if (!booking || booking.userId !== session.user!.id) {
+        throw new Error("Booking not found");
+      }
+
       const bookingSeats = await tx.bookingSeat.findMany({ where: { bookingId } });
 
       await tx.seat.updateMany({
@@ -15,11 +26,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       });
 
       await tx.bookingSeat.deleteMany({ where: { bookingId } });
-
-      const result = await tx.booking.deleteMany({ where: { bookingId } });
-      if (result.count === 0) {
-        throw new Error("Booking not found");
-      }
+      await tx.booking.delete({ where: { bookingId } });
     });
 
     return NextResponse.json({
