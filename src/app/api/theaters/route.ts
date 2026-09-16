@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { serializeTheater } from "@/lib/serializers";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function GET() {
   try {
@@ -16,8 +17,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const { response } = await requireAdmin();
+  if (response) return response;
+
   const body = await req.json();
-  const { name, location, city, total_screens } = body;
+  const { name, location, city, total_screens, cancellation_status } = body;
 
   if (!name || !location) {
     return NextResponse.json(
@@ -33,6 +37,7 @@ export async function POST(req: NextRequest) {
         location,
         city: city || "Mumbai",
         totalScreens: Number(total_screens) || 4,
+        cancellationStatus: cancellation_status || "Non-cancellable",
       },
     });
     return NextResponse.json(

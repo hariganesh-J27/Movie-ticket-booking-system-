@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { serializeMovie } from "@/lib/serializers";
+import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function GET() {
   try {
@@ -12,6 +13,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const { response } = await requireAdmin();
+  if (response) return response;
+
   const body = await req.json();
   const { title, genre, duration, rating, language, description, poster_url, banner_url, release_date } = body;
 
