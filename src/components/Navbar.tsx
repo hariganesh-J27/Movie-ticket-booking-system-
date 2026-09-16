@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, MapPin, Ticket, Film, ChevronDown, PlusCircle, LogIn, LogOut } from "lucide-react";
+import Link from "next/link";
+import { Search, MapPin, Ticket, Film, ChevronDown, LogIn, LogOut, ShieldCheck } from "lucide-react";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 interface NavbarProps {
@@ -9,7 +10,6 @@ interface NavbarProps {
   selectedCity: string;
   onOpenCitySelector: () => void;
   onOpenMyBookings: () => void;
-  onOpenAddMovie: () => void;
   onResetHome: () => void;
 }
 
@@ -19,7 +19,6 @@ export default function Navbar({
   selectedCity,
   onOpenCitySelector,
   onOpenMyBookings,
-  onOpenAddMovie,
   onResetHome,
 }: NavbarProps) {
   const { data: session, status } = useSession();
@@ -70,13 +69,15 @@ export default function Navbar({
             <span>My Bookings</span>
           </button>
 
-          <button
-            onClick={onOpenAddMovie}
-            className="flex items-center gap-1.5 text-xs md:text-sm bg-[#2B3141] hover:bg-[#363D50] text-gray-200 px-3 py-1.5 rounded-md transition font-medium border border-gray-700 cursor-pointer"
-          >
-            <PlusCircle className="w-4 h-4 text-emerald-400" />
-            <span className="hidden sm:inline">Add Movie</span>
-          </button>
+          {session?.user?.isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 text-xs md:text-sm bg-[#2B3141] hover:bg-[#363D50] text-gray-200 px-3 py-1.5 rounded-md transition font-medium border border-gray-700 cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          )}
 
           {status === "authenticated" ? (
             <button

@@ -11,7 +11,6 @@ import SeatPicker from "@/components/SeatPicker";
 import BookingSummaryModal from "@/components/BookingSummaryModal";
 import TicketModal from "@/components/TicketModal";
 import UserBookingsModal from "@/components/UserBookingsModal";
-import AddMovieModal from "@/components/AddMovieModal";
 import CitySelectorModal from "@/components/CitySelectorModal";
 import SeatCountModal from "@/components/SeatCountModal";
 import LanguageFormatModal from "@/components/LanguageFormatModal";
@@ -88,7 +87,6 @@ export default function Home() {
   const [showBookingSummaryModal, setShowBookingSummaryModal] = useState(false);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [showMyBookingsModal, setShowMyBookingsModal] = useState(false);
-  const [showAddMovieModal, setShowAddMovieModal] = useState(false);
 
   const loadMoviesList = async () => {
     try {
@@ -174,7 +172,6 @@ export default function Home() {
         selectedCity={selectedCity}
         onOpenCitySelector={() => setShowCityModal(true)}
         onOpenMyBookings={() => setShowMyBookingsModal(true)}
-        onOpenAddMovie={() => setShowAddMovieModal(true)}
         onResetHome={() => setCurrentView("home")}
       />
 
@@ -331,10 +328,6 @@ export default function Home() {
       {showTicketModal && <TicketModal booking={latestBooking} onClose={() => setShowTicketModal(false)} />}
 
       {showMyBookingsModal && <UserBookingsModal onClose={() => setShowMyBookingsModal(false)} />}
-
-      {showAddMovieModal && (
-        <AddMovieModal onClose={() => setShowAddMovieModal(false)} onMovieAdded={loadMoviesList} />
-      )}
 
       {showCityModal && (
         <CitySelectorModal
