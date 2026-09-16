@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { buildSeatLayout } from "../src/lib/seatLayout";
 
 const prisma = new PrismaClient();
 
@@ -82,15 +83,7 @@ async function main() {
   }
 
   const times = ["10:15 AM", "01:25 PM", "04:35 PM", "07:00 PM", "10:10 PM"];
-  const seatRows = [
-    { prefix: "A", cat: "DIAMOND", count: 12 },
-    { prefix: "B", cat: "DIAMOND", count: 12 },
-    { prefix: "C", cat: "DIAMOND", count: 12 },
-    { prefix: "D", cat: "DIAMOND", count: 12 },
-    { prefix: "E", cat: "DIAMOND", count: 12 },
-    { prefix: "M", cat: "PEARL", count: 10 },
-    { prefix: "N", cat: "PEARL", count: 10 },
-  ];
+  const seatLayout = buildSeatLayout();
 
   for (const movieId of movieIds) {
     for (const theaterId of theaterIds) {
@@ -108,19 +101,12 @@ async function main() {
             },
           });
 
-          const seatsToCreate = [];
-          for (const r of seatRows) {
-            for (let i = 1; i <= r.count; i++) {
-              const seatNum = `${r.prefix}${i < 10 ? "0" + i : i}`;
-              const isBooked = Math.random() < 0.1 ? 1 : 0;
-              seatsToCreate.push({
-                showtimeId: showtime.showtimeId,
-                seatNumber: seatNum,
-                seatCategory: r.cat,
-                isBooked,
-              });
-            }
-          }
+          const seatsToCreate = seatLayout.map((seat) => ({
+            showtimeId: showtime.showtimeId,
+            seatNumber: seat.seatNumber,
+            seatCategory: seat.seatCategory,
+            isBooked: Math.random() < 0.1 ? 1 : 0,
+          }));
           await prisma.seat.createMany({ data: seatsToCreate });
         }
       }
