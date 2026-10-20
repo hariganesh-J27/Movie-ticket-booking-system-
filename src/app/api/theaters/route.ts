@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { serializeTheater } from "@/lib/serializers";
+import { query } from "@/lib/db";
+import { THEATER_COLS } from "@/lib/columns";
 import { requireAdmin } from "@/lib/requireAdmin";
 
 export async function GET() {
   try {
-    const theaters = await prisma.theater.findMany({ orderBy: { theaterId: "asc" } });
-    return NextResponse.json({
-      success: true,
-      count: theaters.length,
-      data: theaters.map(serializeTheater),
-    });
+    const theaters = await query(`SELECT ${THEATER_COLS} FROM theaters ORDER BY theater_id ASC`);
+    return NextResponse.json({ success: true, count: theaters.length, data: theaters });
   } catch (error) {
     return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
   }
@@ -31,17 +27,14 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const theater = await prisma.theater.create({
-      data: {
-        name,
-        location,
-        city: city || "Mumbai",
-        totalScreens: Number(total_screens) || 4,
-        cancellationStatus: cancellation_status || "Non-cancellable",
-      },
-    });
+    const rows = await query<{ theater_id: number }>(
+      `INSERT INTO theaters (name, location, city, total_screens, cancellation_status)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING theater_id`,
+      [name, location, city || "Mumbai", Number(total_screens) || 4, cancellation_status || "Non-cancellable"]
+    );
     return NextResponse.json(
-      { success: true, message: "Theater added successfully", theater_id: theater.theaterId },
+      { success: true, message: "Theater added successfully", theater_id: rows[0].theater_id },
       { status: 201 }
     );
   } catch (error) {
