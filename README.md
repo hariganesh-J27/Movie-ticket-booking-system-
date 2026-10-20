@@ -6,7 +6,7 @@ A movie ticket booking app: browse movies, pick a showtime and cinema, choose se
 
 - **Next.js 16** (App Router, TypeScript, Turbopack)
 - **Tailwind CSS v4**
-- **Prisma** + **PostgreSQL**
+- **PostgreSQL** with plain SQL and PL/pgSQL (functions + triggers), via `pg`
 
 ## Getting Started
 
@@ -15,8 +15,8 @@ A movie ticket booking app: browse movies, pick a showtime and cinema, choose se
 
    ```bash
    npm install
-   npx prisma migrate dev
-   npx prisma db seed
+   npm run db:setup   # tables, PL/pgSQL functions, triggers, view (db/schema.sql, db/routines.sql)
+   npm run db:seed    # movies, theaters, showtimes and seats (db/seed.sql)
    ```
 
 3. Run the dev server:
@@ -31,9 +31,11 @@ A movie ticket booking app: browse movies, pick a showtime and cinema, choose se
 
 - `src/app` — pages and API route handlers (`src/app/api/*`)
 - `src/components` — UI components
-- `src/lib` — Prisma client, API client, shared types
-- `prisma/schema.prisma` — database schema
-- `prisma/seed.ts` — seeds movies, theaters, showtimes, and seats
+- `src/lib` — `pg` pool and SQL helpers, Auth.js SQL adapter, API client, shared types
+- `db/schema.sql` — table definitions
+- `db/routines.sql` — PL/pgSQL functions (`fn_book_seats`, `fn_cancel_booking`, `fn_create_showtime`), triggers (seat booking/release, audit log, validation) and the `v_booking_details` view
+- `db/seed.sql` — seeds movies, theaters, showtimes, and seats
+- `scripts/db.ts` — runs the SQL files above
 
 ## API
 
