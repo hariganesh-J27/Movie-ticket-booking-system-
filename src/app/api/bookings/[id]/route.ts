@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
+import { parseId, query } from "@/lib/db";
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -9,25 +9,15 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   }
 
   const { id } = await params;
-  const bookingId = Number(id);
+  const bookingId = parseId(id);
+  if (bookingId === null) {
+    return NextResponse.json({ success: false, error: "Booking not found" }, { status: 500 });
+  }
 
   try {
-    await prisma.$transaction(async (tx) => {
-      const booking = await tx.booking.findUnique({ where: { bookingId } });
-      if (!booking || booking.userId !== session.user!.id) {
-        throw new Error("Booking not found");
-      }
-
-      const bookingSeats = await tx.bookingSeat.findMany({ where: { bookingId } });
-
-      await tx.seat.updateMany({
-        where: { seatId: { in: bookingSeats.map((bs) => bs.seatId) } },
-        data: { isBooked: 0 },
-      });
-
-      await tx.bookingSeat.deleteMany({ where: { bookingId } });
-      await tx.booking.delete({ where: { bookingId } });
-    });
+    // fn_cancel_booking deletes the booking if it belongs to the user; trg_release_seat
+    // frees the seats and trg_audit_booking records the cancellation.
+    await query(`SELECT fn_cancel_booking($1, $2)`, [bookingId, session.user.id]);
 
     return NextResponse.json({
       success: true,
